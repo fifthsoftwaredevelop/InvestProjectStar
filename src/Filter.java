@@ -1,4 +1,5 @@
 import java.awt.Color;
+import java.awt.Dialog;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Image;
@@ -16,6 +17,7 @@ import java.util.regex.Pattern;
 import javax.swing.ButtonGroup;
 import javax.swing.ButtonModel;
 import javax.swing.JButton;
+import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JLayer;
 import javax.swing.JOptionPane;
@@ -647,10 +649,13 @@ public class Filter extends JPanel implements ActionListener {
 			money_max.setText("");
 		}
 		else if(e.getSource()==changemoney){
-			
-			Object selectedValue = JOptionPane.showInputDialog(null, "Choose one");
-			investmoney=Double.parseDouble((String)selectedValue);
+	        MyDialog dlg=new MyDialog((MyFrame)(getTopLevelAncestor()),true);
+	        dlg.show();
+	        if(dlg.issucess())
+	        {
+	        investmoney=Double.parseDouble(dlg.getMoneymessage());
 			Displaymoney.setText("可投资金额："+investmoney+"元");
+	        }
 			
 		}
 		else{
