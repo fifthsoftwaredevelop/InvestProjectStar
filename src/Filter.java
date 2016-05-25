@@ -121,7 +121,7 @@ public class Filter extends JPanel implements ActionListener {
 	private JButton last;
 	private JLabel page;
 	private Capture cap;
-	private JLabel Displaymoney;
+	public static JLabel Displaymoney;
 	private JLabel Displaytime;
 	private JButton changemoney;
 	public  static  InitInvestMessage message;

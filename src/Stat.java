@@ -1,5 +1,4 @@
 import java.awt.Graphics;
-
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -59,6 +58,7 @@ public class Stat extends JPanel implements ActionListener, TableModelListener {
 	private ReadAndWrite raw;
 	private JComboBox comboBox;
 	private String linetype = "投资曲线";
+	private boolean flag = true;
 
 	public Stat() {
 		setLayout(null);
@@ -73,7 +73,6 @@ public class Stat extends JPanel implements ActionListener, TableModelListener {
 		raw = new ReadAndWrite();
 		defaultModel = new DefaultTableModel(raw.readexcel(System
 				.getProperty("user.dir") + "\\project.xls"), name);
-		
 
 		defaultModel.addTableModelListener(this);
 		table = new JTable(defaultModel);
@@ -125,12 +124,15 @@ public class Stat extends JPanel implements ActionListener, TableModelListener {
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == addbutton) {
-
-			defaultModel.addRow(new Object[] { null, null, null, null,
-					new JButton("赎回") });
-			System.out.println("kk");
+			AddColDialog adddialog = new AddColDialog(
+					(MyFrame) getTopLevelAncestor(), true,
+					defaultModel.getDataVector());
+			adddialog.show();
+			if (adddialog.issucess())
+				defaultModel.addRow(new Object[] {
+						adddialog.getTimemessage().replace("-", ""), "购买",
+						adddialog.getMoneymessage(), adddialog.getNamemesage(), new JButton("赎回") });
 		} else if (e.getSource() == subbutton) {
-			System.out.println("nn");
 			int rowcount = defaultModel.getRowCount() - 1;// getRowCount返回行数，rowcount<0代表已经没有任何行了。
 			if (rowcount >= 0) {
 				int id = table.getSelectedRow();
@@ -141,26 +143,33 @@ public class Stat extends JPanel implements ActionListener, TableModelListener {
 
 			}
 		} else if (e.getSource() == importbutton) {
-			/*JFileChooser jfc;
-			jfc = new JFileChooser(dir);*/
 			JFileImportChooser jfc;
-			jfc=new JFileImportChooser();
+			jfc = new JFileImportChooser();
 			jfc.setCurrentDirectory(new File(dir));
 			jfc.setSelectedFile(new File("project.xls"));
 			jfc.setFileSelectionMode(JFileChooser.FILES_ONLY);
-			jfc.showDialog(new JLabel(), "选择");
-			File file = jfc.getSelectedFile();
-			if (file.isFile()) {
-				ReadAndWrite raw = new ReadAndWrite();
-				dir = file.getAbsolutePath();
-				System.out.println(dir);
-				defaultModel = new DefaultTableModel(raw.readexcel(file
-						.getAbsolutePath()), name);
-				table.setModel(defaultModel);
-				table.getColumnModel().getColumn(4)
-						.setCellRenderer(new MyButtonRender());
-				table.getColumnModel().getColumn(4)
-						.setCellEditor(new MyButtonEditor(table));
+			int result = jfc.showDialog(new JLabel(), "选择");
+			if (result == 0) {
+				File file = jfc.getSelectedFile();
+				if (file.isFile()) {
+					ReadAndWrite raw = new ReadAndWrite();
+					System.out.println(dir);
+
+					Object[][] data = checkdata(defaultModel.getDataVector(),
+							raw.readexcel(file.getAbsolutePath()));
+					if (flag == false) {
+						JOptionPane
+								.showMessageDialog(null, "导入的文件数据有误或者重复或者为空");
+						flag = true;
+					}
+					defaultModel = new DefaultTableModel(data, name);
+					defaultModel.addTableModelListener(this);
+					table.setModel(defaultModel);
+					table.getColumnModel().getColumn(4)
+							.setCellRenderer(new MyButtonRender());
+					table.getColumnModel().getColumn(4)
+							.setCellEditor(new MyButtonEditor(table));
+				}
 			}
 		} else if (e.getSource() == exportbutton) {
 			Vector<Vector> data = defaultModel.getDataVector();
@@ -184,7 +193,12 @@ public class Stat extends JPanel implements ActionListener, TableModelListener {
 
 		} else if (e.getSource() == clearbutton) {
 			defaultModel = new DefaultTableModel(null, name);
+			defaultModel.addTableModelListener(this);
 			table.setModel(defaultModel);
+			table.getColumnModel().getColumn(4)
+					.setCellRenderer(new MyButtonRender());
+			table.getColumnModel().getColumn(4)
+					.setCellEditor(new MyButtonEditor(table));
 			if (chartpanel != null) {
 				this.setVisible(false);
 				this.remove(chartpanel);
@@ -280,8 +294,102 @@ public class Stat extends JPanel implements ActionListener, TableModelListener {
 
 	}
 
+	public Object[][] checkdata(Vector<Vector> befordata, Object[][] newdata) {
+		Object[][] data;
+		Object[][] beforedata1;
+		int a = befordata.size();
+		int b = 5;
+		if (a == 0) {
+			beforedata1 = null;
+
+		} else {
+			beforedata1 = new Object[a][b];
+			for (int i = 0; i < a; i++)
+				for (int j = 0; j < b; j++)
+					beforedata1[i][j] = befordata.get(i).get(j);
+		}
+
+		if (newdata == null) {
+			flag = false;
+			return beforedata1;
+		}
+		int c = newdata.length;
+		data = new Object[a + c][b];
+		SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
+		Date initdate = null;
+		Date currentdate = new Date();
+		try {
+			initdate = format.parse(Filter.message.getTime());
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+		for (int i = 0; i < c; i++) {
+			try {
+				Date date = format.parse((String) newdata[i][0]);
+				if (!(initdate.before(date) && currentdate.after(date))) {
+					flag = false;
+					return beforedata1;
+				}
+			} catch (ParseException e) {
+				flag = false;
+				e.printStackTrace();
+				return beforedata1;
+			}
+		}
+		for (int i = 0; i < c; i++) {
+			try {
+				Double k = Double.parseDouble((String) newdata[i][2]);
+			} catch (NumberFormatException e) {
+				flag = false;
+				return beforedata1;
+			}
+
+			if (newdata[i][1].equals("赎回")) {
+				int k = 0;
+				for (k = 0; k < c && k != i; k++)
+					if (newdata[k][3].equals(newdata[i][3])
+							&& newdata[k][1].equals("购买"))
+						break;
+				if (k == c) {
+					flag = false;
+					return beforedata1;
+				}
+
+			} else if (newdata[i][1].equals("购买")) {
+				if (beforedata1 != null)
+					for (int j = 0; j < a; j++)
+						if (beforedata1[j][3].equals(newdata[i][3])
+								&& beforedata1[j][1].equals(newdata[i][1])) {
+							flag = false;
+							return beforedata1;
+						}
+				for (int j = 0; j < c && j != i; j++)
+					if (newdata[j][3].equals(newdata[i][3])) {
+						flag = false;
+						return beforedata1;
+					}
+
+			} else {
+				flag = false;
+				return beforedata1;
+			}
+		}
+		if (beforedata1 != null)
+			for (int i = 0; i < a; i++)
+				for (int j = 0; j < b; j++)
+					data[i][j] = beforedata1[i][j];
+		for (int i = a; i < a + c; i++)
+			for (int j = 0; j < b; j++)
+				data[i][j] = newdata[i - a][j];
+		return data;
+	}
+
 	@Override
 	public void tableChanged(TableModelEvent e) {
+		int row = e.getFirstRow();
+		int col = e.getColumn();
+		System.out.println("row:" + row + ",col:" + col);
 
 	}
+
 }

@@ -35,21 +35,19 @@ public class MyButtonEditor extends DefaultCellEditor{
 		this.button.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				// 触发取消编辑的事件，不会调用tableModel的setValue方法。
+				String time=(String) Stat.defaultModel.getValueAt(table.getSelectedRow(), 0);
+				String money=(String) Stat.defaultModel.getValueAt(table.getSelectedRow(), 2);
 				MyButtonEditor.this.fireEditingCanceled();
-				int result = JOptionPane.showConfirmDialog(
-						null,
-						"第" + table.getSelectedRow() + "行" + "第"
-								+ table.getSelectedColumn() + "列"
-								+ "   JButton   Clicked", "Test",
-						JOptionPane.OK_CANCEL_OPTION);
+				MyButtonDialog mydialog=new MyButtonDialog((MyFrame)(getComponent().getParent()), true,time,money);
+				mydialog.show();
+				int result=mydialog.issucess()?0:1;
 				if (result == 0&&((JButton)e.getSource()).getText()!="") {
 					String s=(String) Stat.defaultModel.getValueAt(table.getSelectedRow(), 3);
-					Object data[]={null,"赎回",null,s,null};
-					//Stat.defaultModel.addRow(new Vector());
+					Object data[]={mydialog.getTimemessage().replace("-", ""),"赎回",mydialog.getMoneymessage(),s,null};
 					Stat.defaultModel.addRow(data);
-					//JButton b=new JButton("已赎回");
 					Stat.defaultModel.setValueAt(null, table.getSelectedRow(), table.getSelectedColumn());
-					//System.out.println();
+				    Filter.message.addmoney(Double.parseDouble(mydialog.getMoneymessage()));
+				    Filter.Displaymoney.setText("可投资"+Filter.message.getMoney()+"元");
 				}
 		
 			}

@@ -21,6 +21,9 @@ public class InitInvestMessage {
 	public void submoney(Double k){
 		money-=k;
 	}
+	public void addmoney(Double k){
+		money+=k;
+	}
 	
 
 }
