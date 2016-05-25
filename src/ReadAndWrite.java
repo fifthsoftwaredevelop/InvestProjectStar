@@ -8,8 +8,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.sql.SQLException;
+import java.sql.Struct;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 
 import javax.swing.JButton;
@@ -30,6 +33,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 
 public class ReadAndWrite {
+	
 	public void exportexcel(String dirname,Vector<Vector> data){
 		HSSFWorkbook wb = new HSSFWorkbook();
 		// 声明一个单子并命名
@@ -234,7 +238,8 @@ public class ReadAndWrite {
 		
 		return data;
 	}
-	public Double readtxt(String dirname) {
+	public InitInvestMessage readtxt(String dirname) {
+		InitInvestMessage init=new InitInvestMessage(0.0, "未设置时间");
 		Double money=0.0;
 		try {
 			String encoding = "GBK";
@@ -246,6 +251,9 @@ public class ReadAndWrite {
 				String s=null;
 				if((s=bufferedReader.readLine())!=null)
 				money = Double.parseDouble(s);
+			    init.setMoney(money);
+			    if((s=bufferedReader.readLine())!=null)
+			    init.setTime(s);
 				read.close();
 			} else {
 				System.out.println("找不到指定的文件");
@@ -254,10 +262,10 @@ public class ReadAndWrite {
 			System.out.println("读取文件内容出错");
 			e.printStackTrace();
 		}
-		return money;
+		return init;
 	}
 
-	public void writetxt(String dirname, String money) {
+	public void writetxt(String dirname, String money,String time) {
 		try {
 			String encoding = "GBK";
 			File file = new File(dirname);
@@ -267,6 +275,7 @@ public class ReadAndWrite {
 				BufferedWriter bufferedwrite = new BufferedWriter(read);
 				String lineTxt = null;
 				bufferedwrite.write(money + "\r\n");
+				bufferedwrite.write(time+"\r\n");
 				bufferedwrite.close();
 			} else {
 				System.out.println("找不到指定的文件");
@@ -276,5 +285,8 @@ public class ReadAndWrite {
 			e.printStackTrace();
 		}
 	}
+       
+	
+
 
 }

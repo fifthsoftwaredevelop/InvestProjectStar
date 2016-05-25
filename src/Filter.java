@@ -122,8 +122,9 @@ public class Filter extends JPanel implements ActionListener {
 	private JLabel page;
 	private Capture cap;
 	private JLabel Displaymoney;
+	private JLabel Displaytime;
 	private JButton changemoney;
-	public  static Double investmoney;
+	public  static  InitInvestMessage message;
 	private ReadAndWrite raw;
 
 	private JLabel projects[] = { project_one, project_two, project_three,
@@ -267,17 +268,23 @@ public class Filter extends JPanel implements ActionListener {
 		page.setText("当前第" + currentpage + "页");
 		String path=System.getProperty("user.dir")+"\\money.txt";
 		raw=new ReadAndWrite();
-		investmoney=raw.readtxt(path);
-		System.out.println(investmoney);
-		Displaymoney = new JLabel("可投资金额："+investmoney+"元");
-		Displaymoney.setBounds(891, 15, 234, 29);
+		//investmoney=raw.readtxt(path);
+		message=raw.readtxt(path);
+		System.out.println(message.getMoney());
+		Displaymoney = new JLabel("可投资金额："+message.getMoney()+"元");
+		Displaymoney.setBounds(891, 15, 269, 29);
 		Displaymoney.setFont(new Font("宋体", Font.BOLD, 16));
 		add(Displaymoney);
 		
 		changemoney = new JButton("修改可投资");
-		changemoney.setBounds(1130, 14, 123, 29);
+		changemoney.setBounds(1175, 14, 123, 29);
 		changemoney.addActionListener(this);
 		add(changemoney);
+		
+		Displaytime = new JLabel("投资时间："+message.getTime());
+		Displaytime.setFont(new Font("宋体", Font.BOLD, 16));
+		Displaytime.setBounds(891, 62, 269, 29);
+		add(Displaytime);
 	}
 
 	private void setTime() {
@@ -653,8 +660,15 @@ public class Filter extends JPanel implements ActionListener {
 	        dlg.show();
 	        if(dlg.issucess())
 	        {
-	        investmoney=Double.parseDouble(dlg.getMoneymessage());
-			Displaymoney.setText("可投资金额："+investmoney+"元");
+	       // investmoney=Double.parseDouble(dlg.getMoneymessage());
+	        message.setMoney(Double.parseDouble(dlg.getMoneymessage()));
+	        message.setTime(dlg.getTimemessage());
+	        System.out.println(dlg.getMoneymessage());
+	        System.out.println(dlg.getTimemessage());
+			Displaymoney.setText("可投资金额："+message.getMoney()+"元");
+			Displaytime.setText("投资时间："+message.getTime());
+			String path=System.getProperty("user.dir")+"\\money.txt";
+			raw.writetxt(path, String.valueOf(message.getMoney()), message.getTime());
 	        }
 			
 		}
@@ -663,10 +677,11 @@ public class Filter extends JPanel implements ActionListener {
 		for(int i=0;i<10;i++)
 			if(projects_button[i]==e.getSource()){
 				Double k=list.get(i).getMoney();
-				if(k.compareTo(investmoney)==1){
+				if(k.compareTo(message.getMoney())==1){
 					break;
 				}
-				investmoney-=k;
+				//investmoney-=k;
+				message.submoney(k);
 				String[] data=new String[4];
 				Date date=new Date();
 				SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
@@ -687,7 +702,7 @@ public class Filter extends JPanel implements ActionListener {
 				}
 				
 				cap.StartBrower(list.get(i).getUrl());
-				Displaymoney.setText("可投资"+investmoney+"元");
+				Displaymoney.setText("可投资"+message.getMoney()+"元");
 				break;
 			}
 		
