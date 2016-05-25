@@ -4,7 +4,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
 
-public class JFileChooserDemo extends JFileChooser{
+public class JFileExportChooser extends JFileChooser{
 	@Override
 	public void approveSelection() {
 		File file = getSelectedFile();

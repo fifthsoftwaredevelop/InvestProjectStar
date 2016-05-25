@@ -51,7 +51,7 @@ public class Stat extends JPanel implements ActionListener, TableModelListener {
 	private JButton subbutton;
 	private JButton clearbutton;
 	private String[] name = { "日期", "操作", "金额", "项目编号", "赎回操作" };
-	private String dir = null;
+	private String dir = System.getProperty("user.dir");
 	private JButton createbutton;
 	private JButton exportbutton;
 	private ChartPanel chartpanel;
@@ -141,18 +141,19 @@ public class Stat extends JPanel implements ActionListener, TableModelListener {
 
 			}
 		} else if (e.getSource() == importbutton) {
-			// List<String[]>list=new ArrayList<String[]>();
-			JFileChooser jfc;
-			if (dir != null)
-				jfc = new JFileChooser(dir);
-			else
-				jfc = new JFileChooser();
+			/*JFileChooser jfc;
+			jfc = new JFileChooser(dir);*/
+			JFileImportChooser jfc;
+			jfc=new JFileImportChooser();
+			jfc.setCurrentDirectory(new File(dir));
+			jfc.setSelectedFile(new File("project.xls"));
 			jfc.setFileSelectionMode(JFileChooser.FILES_ONLY);
 			jfc.showDialog(new JLabel(), "选择");
 			File file = jfc.getSelectedFile();
 			if (file.isFile()) {
 				ReadAndWrite raw = new ReadAndWrite();
 				dir = file.getAbsolutePath();
+				System.out.println(dir);
 				defaultModel = new DefaultTableModel(raw.readexcel(file
 						.getAbsolutePath()), name);
 				table.setModel(defaultModel);
@@ -160,7 +161,6 @@ public class Stat extends JPanel implements ActionListener, TableModelListener {
 						.setCellRenderer(new MyButtonRender());
 				table.getColumnModel().getColumn(4)
 						.setCellEditor(new MyButtonEditor(table));
-
 			}
 		} else if (e.getSource() == exportbutton) {
 			Vector<Vector> data = defaultModel.getDataVector();
@@ -171,7 +171,7 @@ public class Stat extends JPanel implements ActionListener, TableModelListener {
 			FileSystemView fsv = FileSystemView.getFileSystemView();
 			File path = fsv.getHomeDirectory();
 
-			JFileChooserDemo chooser = new JFileChooserDemo();
+			JFileExportChooser chooser = new JFileExportChooser();
 			chooser.setCurrentDirectory(path);
 			chooser.setSelectedFile(new File(name));
 			chooser.setDialogTitle("保存文件");
