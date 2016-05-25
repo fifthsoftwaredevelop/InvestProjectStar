@@ -124,6 +124,57 @@ public class ReadAndWrite {
 		}
 
 	}
+	public void Keepdata(String dirname, Vector<Vector> data) throws IOException {
+		dirname=dirname.replace("\\","/");
+		FileInputStream fs = new FileInputStream(dirname); // 获取d://test.xls
+		POIFSFileSystem ps = new POIFSFileSystem(fs); // 使用POI提供的方法得到excel的信息
+		HSSFWorkbook wb = new HSSFWorkbook(ps);
+		// 创建表格
+		Sheet sheet = wb.getSheetAt(0);
+		// 创建行
+		Row row=null;
+		Cell cell = null;
+		int a=sheet.getLastRowNum()+1;
+        	System.out.println("写第一行");
+			row = sheet.createRow(0);
+		    cell = row.createCell(0);
+		    cell.setCellValue("日期");
+		    cell = row.createCell(1);
+		    cell.setCellValue("操作");
+		    cell = row.createCell(2);
+		    cell.setCellValue("金额");
+		    cell = row.createCell(3);
+		    cell.setCellValue("项目编号");
+		
+		//row = sheet.createRow(sheet.getLastRowNum()+1);
+		
+		for(int i=1;i<=a;i++){
+			row = sheet.createRow(i);
+			for(int j=0;j<4;j++)
+			{
+			cell = row.createCell(j);
+			cell.setCellValue("");
+			}
+		}
+		int b = data.size();
+		for (int i = 1; i <=b; i++) {
+			row = sheet.createRow(i);
+			for(int j=0;j<4;j++)
+			{
+			cell = row.createCell(j);
+			cell.setCellValue((String)data.get(i-1).get(j));
+			}
+		  }
+		
+		FileOutputStream fos;
+
+		fos = new FileOutputStream(dirname);
+		wb.write(fos);
+		if (null != fos) {
+			fos.close();
+		}
+
+	}
 
 	public Object[][] readexcel(String dirname) {
 		dirname=dirname.replace("\\","/");
@@ -210,6 +261,8 @@ public class ReadAndWrite {
 				list.add(singlerow);
 			}
 			int a=list.size();
+			if(a==0)
+				return data;
 	        int b=list.get(0).length;
 	        System.out.println(b);
 	        data=new Object[a-1][b+1];
@@ -250,8 +303,11 @@ public class ReadAndWrite {
 				BufferedReader bufferedReader = new BufferedReader(read);
 				String s=null;
 				if((s=bufferedReader.readLine())!=null)
+					money = Double.parseDouble(s);
+				    init.setInitmoney(money);
+				if((s=bufferedReader.readLine())!=null)
 				money = Double.parseDouble(s);
-			    init.setMoney(money);
+			    init.setcurrentmoney(money);
 			    if((s=bufferedReader.readLine())!=null)
 			    init.setTime(s);
 				read.close();
@@ -265,7 +321,7 @@ public class ReadAndWrite {
 		return init;
 	}
 
-	public void writetxt(String dirname, String money,String time) {
+	public void writetxt(String dirname, String initmoney,String currentmoney,String time) {
 		try {
 			String encoding = "GBK";
 			File file = new File(dirname);
@@ -274,7 +330,8 @@ public class ReadAndWrite {
 						new FileOutputStream(file), encoding);// 考虑到编码格式
 				BufferedWriter bufferedwrite = new BufferedWriter(read);
 				String lineTxt = null;
-				bufferedwrite.write(money + "\r\n");
+				bufferedwrite.write(initmoney + "\r\n");
+				bufferedwrite.write(currentmoney + "\r\n");
 				bufferedwrite.write(time+"\r\n");
 				bufferedwrite.close();
 			} else {

@@ -270,8 +270,8 @@ public class Filter extends JPanel implements ActionListener {
 		raw=new ReadAndWrite();
 		//investmoney=raw.readtxt(path);
 		message=raw.readtxt(path);
-		System.out.println(message.getMoney());
-		Displaymoney = new JLabel("可投资金额："+message.getMoney()+"元");
+		System.out.println(message.getcurrentmoney());
+		Displaymoney = new JLabel("可投资金额："+message.getcurrentmoney()+"元");
 		Displaymoney.setBounds(891, 15, 269, 29);
 		Displaymoney.setFont(new Font("宋体", Font.BOLD, 16));
 		add(Displaymoney);
@@ -661,14 +661,15 @@ public class Filter extends JPanel implements ActionListener {
 	        if(dlg.issucess())
 	        {
 	       // investmoney=Double.parseDouble(dlg.getMoneymessage());
-	        message.setMoney(Double.parseDouble(dlg.getMoneymessage()));
+	        message.setInitmoney(Double.parseDouble(dlg.getMoneymessage()));
+	        message.setcurrentmoney(Double.parseDouble(dlg.getMoneymessage()));
 	        message.setTime(dlg.getTimemessage());
 	        System.out.println(dlg.getMoneymessage());
 	        System.out.println(dlg.getTimemessage());
-			Displaymoney.setText("可投资金额："+message.getMoney()+"元");
+			Displaymoney.setText("可投资金额："+message.getcurrentmoney()+"元");
 			Displaytime.setText("投资时间："+message.getTime());
 			String path=System.getProperty("user.dir")+"\\money.txt";
-			raw.writetxt(path, String.valueOf(message.getMoney()), message.getTime());
+			raw.writetxt(path,String.valueOf(message.getInitmoney()),String.valueOf(message.getcurrentmoney()), message.getTime());
 	        }
 			
 		}
@@ -677,7 +678,7 @@ public class Filter extends JPanel implements ActionListener {
 		for(int i=0;i<10;i++)
 			if(projects_button[i]==e.getSource()){
 				Double k=list.get(i).getMoney();
-				if(k.compareTo(message.getMoney())==1){
+				if(k.compareTo(message.getcurrentmoney())==1){
 					break;
 				}
 				//investmoney-=k;
@@ -702,7 +703,7 @@ public class Filter extends JPanel implements ActionListener {
 				}
 				
 				cap.StartBrower(list.get(i).getUrl());
-				Displaymoney.setText("可投资"+message.getMoney()+"元");
+				Displaymoney.setText("可投资"+message.getcurrentmoney()+"元");
 				break;
 			}
 		

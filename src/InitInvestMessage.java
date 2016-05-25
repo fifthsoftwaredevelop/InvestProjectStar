@@ -1,16 +1,26 @@
 
 public class InitInvestMessage {
-	private Double money;
+	private Double currentmoney;
+	private Double initmoney;
 	private String time;
 	public InitInvestMessage(Double money,String time) {
-		this.money=money;
+		this.currentmoney=money;
 		this.time=time;
 	}
-	public Double getMoney() {
-		return money;
+	
+	public Double getInitmoney() {
+		return initmoney;
 	}
-	public void setMoney(Double money) {
-		this.money = money;
+
+	public void setInitmoney(Double initmoney) {
+		this.initmoney = initmoney;
+	}
+
+	public Double getcurrentmoney() {
+		return currentmoney;
+	}
+	public void setcurrentmoney(Double money) {
+		this.currentmoney = money;
 	}
 	public String getTime() {
 		return time;
@@ -19,10 +29,10 @@ public class InitInvestMessage {
 		this.time = time;
 	}
 	public void submoney(Double k){
-		money-=k;
+		currentmoney-=k;
 	}
 	public void addmoney(Double k){
-		money+=k;
+		currentmoney+=k;
 	}
 	
 

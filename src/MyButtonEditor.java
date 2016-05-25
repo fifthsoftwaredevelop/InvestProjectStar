@@ -47,7 +47,7 @@ public class MyButtonEditor extends DefaultCellEditor{
 					Stat.defaultModel.addRow(data);
 					Stat.defaultModel.setValueAt(null, table.getSelectedRow(), table.getSelectedColumn());
 				    Filter.message.addmoney(Double.parseDouble(mydialog.getMoneymessage()));
-				    Filter.Displaymoney.setText("可投资"+Filter.message.getMoney()+"元");
+				    Filter.Displaymoney.setText("可投资"+Filter.message.getcurrentmoney()+"元");
 				}
 		
 			}

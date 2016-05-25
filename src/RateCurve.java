@@ -114,7 +114,7 @@ public class RateCurve {
 			    }
 			    
 			}
-			sum=sum/100000/days*365*100;
+			sum=sum/Filter.message.getInitmoney()/days*365*100;
 			timeseries.add(
 					new Day(currentdate.getDate(), currentdate.getMonth() + 1,
 							currentdate.getYear() + 1900), sum);

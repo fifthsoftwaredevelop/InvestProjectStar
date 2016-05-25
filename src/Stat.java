@@ -1,18 +1,24 @@
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Vector;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
@@ -33,6 +39,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.xmlbeans.impl.xb.xsdschema.impl.ImportDocumentImpl.ImportImpl;
 import org.jfree.chart.ChartPanel;
 
 import javax.swing.JComboBox;
@@ -59,6 +66,8 @@ public class Stat extends JPanel implements ActionListener, TableModelListener {
 	private JComboBox comboBox;
 	private String linetype = "投资曲线";
 	private boolean flag = true;
+	private String oldvalue;
+	public static boolean change=false;
 
 	public Stat() {
 		setLayout(null);
@@ -75,11 +84,27 @@ public class Stat extends JPanel implements ActionListener, TableModelListener {
 				.getProperty("user.dir") + "\\project.xls"), name);
 
 		defaultModel.addTableModelListener(this);
-		table = new JTable(defaultModel);
+		table = new JTable(defaultModel) {
+			@Override
+			public boolean isCellEditable(int row, int column) {
+				if (column == 1)
+					return false;
+				return true;
+			}
+		};
+
 		table.getColumnModel().getColumn(4)
 				.setCellRenderer(new MyButtonRender());
 		table.getColumnModel().getColumn(4)
 				.setCellEditor(new MyButtonEditor(table));
+		table.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				oldvalue = (String) table.getModel().getValueAt(
+						table.getSelectedRow(), table.getSelectedColumn());
+			}
+		});
+
 		scrollPane.setViewportView(table);
 
 		addbutton = new JButton("增加");
@@ -118,6 +143,7 @@ public class Stat extends JPanel implements ActionListener, TableModelListener {
 		comboBox.addItem("收益率曲线");
 		comboBox.addActionListener(this);
 		add(comboBox);
+		
 
 	}
 
@@ -129,9 +155,13 @@ public class Stat extends JPanel implements ActionListener, TableModelListener {
 					defaultModel.getDataVector());
 			adddialog.show();
 			if (adddialog.issucess())
+			{
 				defaultModel.addRow(new Object[] {
 						adddialog.getTimemessage().replace("-", ""), "购买",
-						adddialog.getMoneymessage(), adddialog.getNamemesage(), new JButton("赎回") });
+						adddialog.getMoneymessage(), adddialog.getNamemesage(),
+						new JButton("赎回") });
+				change=true;
+			}
 		} else if (e.getSource() == subbutton) {
 			int rowcount = defaultModel.getRowCount() - 1;// getRowCount返回行数，rowcount<0代表已经没有任何行了。
 			if (rowcount >= 0) {
@@ -139,6 +169,7 @@ public class Stat extends JPanel implements ActionListener, TableModelListener {
 				if (id != -1) {
 					defaultModel.removeRow(id);
 					defaultModel.setRowCount(rowcount);
+					change=true;
 				}
 
 			}
@@ -154,13 +185,15 @@ public class Stat extends JPanel implements ActionListener, TableModelListener {
 				if (file.isFile()) {
 					ReadAndWrite raw = new ReadAndWrite();
 					System.out.println(dir);
-
-					Object[][] data = checkdata(defaultModel.getDataVector(),
-							raw.readexcel(file.getAbsolutePath()));
+					Object[][] Importdata=raw.readexcel(file.getAbsolutePath());
+					Object[][] data = checkImportData(defaultModel.getDataVector(),Importdata);
 					if (flag == false) {
 						JOptionPane
-								.showMessageDialog(null, "导入的文件数据有误或者重复或者为空");
+								.showMessageDialog(null, "导入的文件数据有误或者重复或者为空或者投资超过了剩余投资");
 						flag = true;
+					}
+					else{
+						caculatecurrentmoney(Importdata);
 					}
 					defaultModel = new DefaultTableModel(data, name);
 					defaultModel.addTableModelListener(this);
@@ -169,6 +202,7 @@ public class Stat extends JPanel implements ActionListener, TableModelListener {
 							.setCellRenderer(new MyButtonRender());
 					table.getColumnModel().getColumn(4)
 							.setCellEditor(new MyButtonEditor(table));
+					change=true;
 				}
 			}
 		} else if (e.getSource() == exportbutton) {
@@ -199,6 +233,7 @@ public class Stat extends JPanel implements ActionListener, TableModelListener {
 					.setCellRenderer(new MyButtonRender());
 			table.getColumnModel().getColumn(4)
 					.setCellEditor(new MyButtonEditor(table));
+			change=true;
 			if (chartpanel != null) {
 				this.setVisible(false);
 				this.remove(chartpanel);
@@ -294,7 +329,7 @@ public class Stat extends JPanel implements ActionListener, TableModelListener {
 
 	}
 
-	public Object[][] checkdata(Vector<Vector> befordata, Object[][] newdata) {
+	public Object[][] checkImportData(Vector<Vector> befordata, Object[][] newdata) {
 		Object[][] data;
 		Object[][] beforedata1;
 		int a = befordata.size();
@@ -378,9 +413,19 @@ public class Stat extends JPanel implements ActionListener, TableModelListener {
 			for (int i = 0; i < a; i++)
 				for (int j = 0; j < b; j++)
 					data[i][j] = beforedata1[i][j];
+		Double sum=0.0;
 		for (int i = a; i < a + c; i++)
+		{
+			sum+=Double.parseDouble((String)newdata[i-a][2]);
 			for (int j = 0; j < b; j++)
 				data[i][j] = newdata[i - a][j];
+		}
+		BigDecimal k1=new BigDecimal(sum);
+		BigDecimal k2=new BigDecimal(Filter.message.getcurrentmoney());
+		if(k1.compareTo(k2)==1){
+			flag = false;
+			return beforedata1;
+		}
 		return data;
 	}
 
@@ -388,8 +433,116 @@ public class Stat extends JPanel implements ActionListener, TableModelListener {
 	public void tableChanged(TableModelEvent e) {
 		int row = e.getFirstRow();
 		int col = e.getColumn();
-		System.out.println("row:" + row + ",col:" + col);
+		String message = (String) defaultModel.getValueAt(row, col);
+		
+		if (!message.equals(oldvalue)) {
+			boolean flag = true;
+			if (col != -1 && row != -1)
+				flag = check(message, row, col);
+			if (!flag)
+			{
+				defaultModel.setValueAt(oldvalue, row, col);
+			}
+			change=true;
+		}
+		
+	}
 
+	private boolean check(String currentdata, int row, int col) {
+		switch (col) {
+		case 0:
+			Pattern pattern = Pattern
+					.compile("[0-9][0-9][0-9][0-9]((0[0-9])|(1[0-2]))(([0-2][0-9])|(3[0-1]))");
+			Matcher isdate = pattern.matcher(currentdata);
+			if (!isdate.matches()) {
+				JOptionPane.showMessageDialog(null, "请输入符合格式的时间");
+				return false;
+			}
+			SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
+			try {
+				Date initdate = format.parse(Filter.message.getTime().replace(
+						"-", ""));
+				Date currentdate = new Date();
+				Date date = format.parse(currentdata);
+				if (!(initdate.before(date) && currentdate.after(date))) {
+					JOptionPane.showMessageDialog(null,
+							"该输入时间超过当前时间或者在初始设置时间之前");
+					return false;
+				}
+			} catch (ParseException e) {
+				JOptionPane.showMessageDialog(null, "请输入符合格式的时间");
+				e.printStackTrace();
+				return false;
+			}
+
+			break;
+		case 2:
+			System.out.println(currentdata);
+			Double k;
+			try {
+				k = Double.parseDouble(currentdata);
+			} catch (NumberFormatException e) {
+				JOptionPane.showMessageDialog(null, "请输入数字！");
+				return false;
+			}
+			BigDecimal k1 = new BigDecimal(k);
+			Vector<Vector> olddata = defaultModel.getDataVector();
+			int a = olddata.size();
+			for (int i = 0; i < a; i++) {
+				if (i == row)
+					continue;
+				if (olddata.get(i).get(3).equals(olddata.get(row).get(3))) {
+					System.out.println("get");
+					BigDecimal k2 = new BigDecimal(
+							Double.parseDouble((String) olddata.get(i).get(2)));
+					if (k1.compareTo(k2) == -1) {
+						if (olddata.get(row).get(1).equals("赎回")) {
+							JOptionPane.showMessageDialog(null,
+									"赎回项目的金额要比购买的金额高");
+							return false;
+						}
+					} else if (k1.compareTo(k2) == 1) {
+						if (olddata.get(row).get(1).equals("购买")) {
+							JOptionPane.showMessageDialog(null,
+									"赎回项目的金额要比购买的金额高");
+							return false;
+						}
+					}
+					break;
+				}
+			}
+
+		case 3:
+			if(currentdata.trim().equals("")){
+				JOptionPane.showMessageDialog(null, "项目名称不能为空");
+				return false;
+			}
+			Vector<Vector> data = defaultModel.getDataVector();
+			int num = data.size();
+			for (int i = 0; i < num; i++)
+				if (data.get(i).get(3).equals(currentdata)) {
+					JOptionPane.showMessageDialog(null, "不能有重复的项目");
+					return false;
+				}
+			break;
+
+		default:
+			break;
+		}
+		return true;
+
+	}
+	public void caculatecurrentmoney(Object[][] Importdata){
+		int a=Importdata.length;
+		Double sum=0.0;
+		for(int i=0;i<a;i++){
+			if(Importdata[i][1].equals("购买"))
+				sum+=Double.parseDouble((String)Importdata[i][2]);
+			else
+				sum-=Double.parseDouble((String)Importdata[i][2]);
+		}
+		Filter.message.setcurrentmoney(Filter.message.getcurrentmoney()-sum);
+		Filter.Displaymoney.setText("可投资金额："+Filter.message.getcurrentmoney()+"元");
 	}
 
 }

@@ -81,7 +81,7 @@ public class InvestCurve {
 				org.jfree.data.time.Day.class);
 		SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
 		Calendar c = Calendar.getInstance();
-		Date firstdate = format.parse("20140225");
+		Date firstdate = format.parse(Filter.message.getTime().replace("-", ""));
 		Date currentdate = new Date();
 		int len = list.size();
 		long days = (currentdate.getTime() - firstdate.getTime())
