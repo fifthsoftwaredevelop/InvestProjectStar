@@ -124,7 +124,7 @@ public class Filter extends JPanel implements ActionListener {
 	public static JLabel Displaymoney;
 	private JLabel Displaytime;
 	private JButton changemoney;
-	public  static  InitInvestMessage message;
+	public static InitInvestMessage message;
 	private ReadAndWrite raw;
 
 	private JLabel projects[] = { project_one, project_two, project_three,
@@ -266,22 +266,22 @@ public class Filter extends JPanel implements ActionListener {
 				currentpage, order);
 		setcurrentpage();
 		page.setText("当前第" + currentpage + "页");
-		String path=System.getProperty("user.dir")+"\\money.txt";
-		raw=new ReadAndWrite();
-		//investmoney=raw.readtxt(path);
-		message=raw.readtxt(path);
+		String path = System.getProperty("user.dir") + "\\money.txt";
+		raw = new ReadAndWrite();
+		// investmoney=raw.readtxt(path);
+		message = raw.readtxt(path);
 		System.out.println(message.getcurrentmoney());
-		Displaymoney = new JLabel("可投资金额："+message.getcurrentmoney()+"元");
+		Displaymoney = new JLabel("可投资金额：" + message.getcurrentmoney() + "元");
 		Displaymoney.setBounds(891, 15, 269, 29);
 		Displaymoney.setFont(new Font("宋体", Font.BOLD, 16));
 		add(Displaymoney);
-		
+
 		changemoney = new JButton("修改可投资");
 		changemoney.setBounds(1175, 14, 123, 29);
 		changemoney.addActionListener(this);
 		add(changemoney);
-		
-		Displaytime = new JLabel("投资时间："+message.getTime());
+
+		Displaytime = new JLabel("投资时间：" + message.getTime());
 		Displaytime.setFont(new Font("宋体", Font.BOLD, 16));
 		Displaytime.setBounds(891, 62, 269, 29);
 		add(Displaytime);
@@ -654,60 +654,76 @@ public class Filter extends JPanel implements ActionListener {
 			maxmoney = null;
 			money_min.setText("");
 			money_max.setText("");
-		}
-		else if(e.getSource()==changemoney){
-	        MyDialog dlg=new MyDialog((MyFrame)(getTopLevelAncestor()),true);
-	        dlg.show();
-	        if(dlg.issucess())
-	        {
-	       // investmoney=Double.parseDouble(dlg.getMoneymessage());
-	        message.setInitmoney(Double.parseDouble(dlg.getMoneymessage()));
-	        message.setcurrentmoney(Double.parseDouble(dlg.getMoneymessage()));
-	        message.setTime(dlg.getTimemessage());
-	        System.out.println(dlg.getMoneymessage());
-	        System.out.println(dlg.getTimemessage());
-			Displaymoney.setText("可投资金额："+message.getcurrentmoney()+"元");
-			Displaytime.setText("投资时间："+message.getTime());
-			String path=System.getProperty("user.dir")+"\\money.txt";
-			raw.writetxt(path,String.valueOf(message.getInitmoney()),String.valueOf(message.getcurrentmoney()), message.getTime());
-	        }
-			
-		}
-		else{
-		
-		for(int i=0;i<10;i++)
-			if(projects_button[i]==e.getSource()){
-				Double k=list.get(i).getMoney();
-				if(k.compareTo(message.getcurrentmoney())==1){
-					break;
-				}
-				//investmoney-=k;
-				message.submoney(k);
-				String[] data=new String[4];
-				Date date=new Date();
-				SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
-				data[0]=format.format(date);
-				data[1]="购买";
-				data[2]=String.valueOf(list.get(i).getMoney());
-				data[3]=list.get(i).getName();
-				System.out.println(data[0]);
-				System.out.println(data[1]);
-				System.out.println(data[2]);
-				System.out.println(data[3]);
-				try {
-					raw.writeexcel(System.getProperty("user.dir")+"\\project.xls", data);
-				} catch (IOException e1) {
-				
-					e1.printStackTrace();
-					break;
-				}
-				
-				cap.StartBrower(list.get(i).getUrl());
-				Displaymoney.setText("可投资"+message.getcurrentmoney()+"元");
-				break;
+		} else if (e.getSource() == changemoney) {
+			MyDialog dlg = new MyDialog((MyFrame) (getTopLevelAncestor()), true);
+			dlg.show();
+			if (dlg.issucess()) {
+				// investmoney=Double.parseDouble(dlg.getMoneymessage());
+				message.setInitmoney(Double.parseDouble(dlg.getMoneymessage()));
+				message.setcurrentmoney(Double.parseDouble(dlg
+						.getMoneymessage()));
+				message.setTime(dlg.getTimemessage());
+				System.out.println(dlg.getMoneymessage());
+				System.out.println(dlg.getTimemessage());
+				Displaymoney
+						.setText("可投资金额：" + message.getcurrentmoney() + "元");
+				Displaytime.setText("投资时间：" + message.getTime());
+				String path = System.getProperty("user.dir") + "\\money.txt";
+				raw.writetxt(path, String.valueOf(message.getInitmoney()),
+						String.valueOf(message.getcurrentmoney()),
+						message.getTime());
+
 			}
-		
-		
+
+		} else {
+
+			for (int i = 0; i < 10; i++)
+				if (projects_button[i] == e.getSource()) {
+					Double k = list.get(i).getMoney();
+					/*
+					 * if(k.compareTo(message.getcurrentmoney())==1){ break; }
+					 */
+					InvestDialog investdialog = new InvestDialog(
+							(MyFrame) getTopLevelAncestor(), true, k);
+					investdialog.show();
+					// investmoney-=k;
+					if (!investdialog.issucess())
+						break;
+
+					message.submoney(Double.parseDouble(investdialog
+							.getMoneymessage()));
+					Displaymoney.setText("可投资" + message.getcurrentmoney()
+							+ "元");
+
+					String[] data = new String[4];
+					Date date = new Date();
+					SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
+					data[0] = format.format(date);
+					data[1] = "购买";
+					data[2] = String.valueOf(list.get(i).getMoney());
+					data[3] = list.get(i).getName();
+					System.out.println(data[0]);
+					System.out.println(data[1]);
+					System.out.println(data[2]);
+					System.out.println(data[3]);
+					try {
+						raw.writeexcel(System.getProperty("user.dir")
+								+ "\\project.xls", data);
+						Stat.defaultModel.addRow(new Object[] {
+								investdialog.getTimemessage().replace("-", ""), "购买",
+								investdialog.getMoneymessage(),
+								list.get(i).getName(), new JButton("赎回") });
+					} catch (IOException e1) {
+
+						e1.printStackTrace();
+						break;
+					}
+
+					cap.StartBrower(list.get(i).getUrl());
+
+					break;
+				}
+
 		}
 
 	}
@@ -754,8 +770,8 @@ public class Filter extends JPanel implements ActionListener {
 			}
 		} else {
 			setprojectvisible(0, 10, false);
-			JOptionPane.showMessageDialog(null, "无网络连接，请检查网路！！",
-					"异常", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(null, "无网络连接，请检查网路！！", "异常",
+					JOptionPane.ERROR_MESSAGE);
 		}
 	}
 

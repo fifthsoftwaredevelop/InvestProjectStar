@@ -42,10 +42,13 @@ public class MyButtonEditor extends DefaultCellEditor{
 				mydialog.show();
 				int result=mydialog.issucess()?0:1;
 				if (result == 0&&((JButton)e.getSource()).getText()!="") {
+					System.out.println("row:"+table.getSelectedRow()+",col:"+table.getSelectedColumn());
 					String s=(String) Stat.defaultModel.getValueAt(table.getSelectedRow(), 3);
 					Object data[]={mydialog.getTimemessage().replace("-", ""),"赎回",mydialog.getMoneymessage(),s,null};
 					Stat.defaultModel.addRow(data);
+					Stat.oldvalue=null;
 					Stat.defaultModel.setValueAt(null, table.getSelectedRow(), table.getSelectedColumn());
+					System.out.println("hah:"+Stat.defaultModel.getValueAt(table.getSelectedRow(), table.getSelectedColumn()));
 				    Filter.message.addmoney(Double.parseDouble(mydialog.getMoneymessage()));
 				    Filter.Displaymoney.setText("可投资"+Filter.message.getcurrentmoney()+"元");
 				}

@@ -24,18 +24,17 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.text.StyledEditorKit.ForegroundAction;
 
-public class MyButtonDialog extends Dialog implements ActionListener {
-	JLabel label1 = new JLabel("请输入赎回时间:");
-	JLabel label2 = new JLabel("请输入赎回金额:");
+public class InvestDialog extends Dialog implements ActionListener {
+	JLabel label1 = new JLabel("请输入投资时间:");
+	JLabel label2 = new JLabel("请输入投资金额:");
 	JLabel label3 = new JLabel("时间格式：2015-09-06");
 	JTextField time = new JTextField(50);
 	JTextField money = new JTextField(50);
 	JButton ok = new JButton("确定");
 	JButton cancel = new JButton("取消");
-	private String buytime;
-	private String buymoney;
 	private String timemessage;
 	private String moneymessage;
+	private Double investmoney;
 	private boolean sucess = false;
 
 	public boolean issucess() {
@@ -50,10 +49,9 @@ public class MyButtonDialog extends Dialog implements ActionListener {
 		return moneymessage;
 	}
 
-	MyButtonDialog(MyFrame parent, boolean modal,String buytime,String buymoney) {
+	InvestDialog(MyFrame parent, boolean modal,Double investmoney) {
 		super(parent, modal);
-		this.buymoney=buymoney;
-		this.buytime=buytime;
+		this.investmoney=investmoney;
 		setTitle("自定义对话框");
 		setBounds(500, 300, 410, 150);
 		setResizable(false);
@@ -132,19 +130,17 @@ public class MyButtonDialog extends Dialog implements ActionListener {
 				return;
 			}
 			SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-			SimpleDateFormat format1 = new SimpleDateFormat("yyyyMMdd");
 			try {
-				Date buytimedate=format1.parse(buytime);
-				Date getdate = format.parse(timemessage);
+				Date initdate=format.parse(Filter.message.getTime());
+				Date firstdate = format.parse(timemessage);
 				Date currentdate = new Date();
-				if(currentdate.before(getdate))
+				if(currentdate.before(firstdate))
 				{
 					JOptionPane.showMessageDialog(null, "该输入时间超过了当前时间");
 					return ;
 				}
-				if(getdate.before(buytimedate))
-				{
-					JOptionPane.showMessageDialog(null, "赎回的时间应该在购买的时间之后");
+				if(initdate.after(firstdate)){
+					JOptionPane.showMessageDialog(null, "该输入时间在初始投资时间之前");
 					return ;
 				}
 			} catch (ParseException e1) {
@@ -152,18 +148,20 @@ public class MyButtonDialog extends Dialog implements ActionListener {
 				e1.printStackTrace();
 			}
 		
-            Double buymonydouble=Double.parseDouble(buymoney);
+           Double k;
 			try {
-				Double a=Double.parseDouble(moneymessage);
-				BigDecimal data1=new BigDecimal(a);
-				BigDecimal data2=new BigDecimal(buymonydouble);
-				if(data1.compareTo(data2)==-1){
-					JOptionPane.showMessageDialog(null, "赎回的金额要比购买的金额大");
-					return;
-				}
+				k=Double.parseDouble(moneymessage);
 			} catch (NumberFormatException e2) {
 				JOptionPane.showMessageDialog(null, "请输入数字");
 				return;
+			}
+			BigDecimal k1=new BigDecimal(k);
+			BigDecimal k2=new BigDecimal(investmoney);
+			BigDecimal k3=new BigDecimal(Filter.message.getcurrentmoney());
+			if(!(k1.compareTo(k2)==1&&k1.compareTo(k3)==-1)){
+			   JOptionPane.showMessageDialog(null, "输入的金额不能超过现有的投资并且要大于项目要求的投资");
+				sucess=false;
+				return ;
 			}
 			sucess = true;
 		} else

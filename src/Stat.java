@@ -66,7 +66,7 @@ public class Stat extends JPanel implements ActionListener, TableModelListener {
 	private JComboBox comboBox;
 	private String linetype = "投资曲线";
 	private boolean flag = true;
-	private String oldvalue;
+	public static String oldvalue;
 	public static boolean change=false;
 
 	public Stat() {
@@ -160,6 +160,8 @@ public class Stat extends JPanel implements ActionListener, TableModelListener {
 						adddialog.getTimemessage().replace("-", ""), "购买",
 						adddialog.getMoneymessage(), adddialog.getNamemesage(),
 						new JButton("赎回") });
+				Filter.message.submoney(Double.parseDouble(adddialog.getMoneymessage()));
+				Filter.Displaymoney.setText("可投资金额：" + Filter.message.getcurrentmoney() + "元");
 				change=true;
 			}
 		} else if (e.getSource() == subbutton) {
@@ -169,6 +171,7 @@ public class Stat extends JPanel implements ActionListener, TableModelListener {
 				if (id != -1) {
 					defaultModel.removeRow(id);
 					defaultModel.setRowCount(rowcount);
+	
 					change=true;
 				}
 
@@ -432,10 +435,14 @@ public class Stat extends JPanel implements ActionListener, TableModelListener {
 	@Override
 	public void tableChanged(TableModelEvent e) {
 		int row = e.getFirstRow();
-		int col = e.getColumn();
+		int col = table.getSelectedColumn();
+		System.out.println("changerow:"+row+"changecol:"+col+",oldvalue:"+oldvalue);
+		if(col!=-1)
+		{
 		String message = (String) defaultModel.getValueAt(row, col);
-		
-		if (!message.equals(oldvalue)) {
+		if(oldvalue==null&&col==4)
+			return ;
+		if (!oldvalue.equals(message)) {
 			boolean flag = true;
 			if (col != -1 && row != -1)
 				flag = check(message, row, col);
@@ -444,6 +451,7 @@ public class Stat extends JPanel implements ActionListener, TableModelListener {
 				defaultModel.setValueAt(oldvalue, row, col);
 			}
 			change=true;
+		}
 		}
 		
 	}
